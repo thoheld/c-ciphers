@@ -87,16 +87,18 @@ string *encrypt_string(cipher c, char *s, char *key) {
         strcpy(new_string->cipher, augustus_encrypt(s, key)); // copy encrypted plain to cipher
     
 	} else { // if AES @@@@@@
-        struct AES_ctx ctx;
-        uint8_t in[(new_string->len)];
-        uint8_t iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-        memcpy(in, s, new_string->len);
-    
-        AES_init_ctx_iv(&ctx, key, iv);
-        AES_CBC_encrypt_buffer(&ctx, in, 16);
-        
-        memcpy(new_string->cipher, in, new_string->len);
-    }
+		struct AES_ctx *a = malloc(sizeof(struct AES_ctx));
+    	char *newiv = calloc(16, sizeof(char));
+		setiv_string(newiv);
+		AES_init_ctx_iv(a, key, newiv);
+		char *buf = malloc(sizeof(new_string->plain));
+		strcpy(buf, new_string->plain);
+		AES_CBC_encrypt_buffer(a, buf, new_string->len);
+		strcpy(new_string->cipher, buf);
+		free(a);
+		free(newiv);
+		free(buf);
+	}
     return new_string;
 
 }
@@ -132,7 +134,10 @@ char *decrypt_string(cipher c, string *str, char *key) {
 
 
 void setiv_string(char *newiv) {
-    uint8_t temp[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    uint8_t temp[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };	
+	for (int i = 0; i < 16; i++) {
+		*(newiv + i) = temp[i];
+	}
 }
 
 
