@@ -9,7 +9,6 @@
 //void default_tests() {
 void main() {
 	// MY TESTS
-		printf("augustusEncrypt(Hello!, 13): %s\n", augustus_encrypt("Hello!", "13"));
 	//
 	printf("ceasarEncrypt(gusty, 1): %s\n", caesar_encrypt("gusty", "1"));
     printf("ceasarEncrypt(gusty, 27): %s\n", caesar_encrypt("gusty", "27"));
@@ -31,7 +30,7 @@ void main() {
     printf("ceasarEncrypt(gusty, 11): %s\n", caesar_encrypt("gusty", "11"));
     printf("augustusEncrypt(gusty, 11): %s\n", augustus_encrypt("gusty", "11"));
     printf("augustusDecript(augustusEncrypt(gusty, 11), 11): %s\n", augustus_decrypt(augustus_encrypt("gusty", "11"), "11"));
-    printf("XXaugustusDecript(augustusEncrypt(gusty, 11), 11): %s\n", decrypt_string(AUGUSTUS, encrypt_string(AUGUSTUS, "gusty", "11"), "11"));
+    printf("augustusDecript(augustusEncrypt(gusty, 11), 11): %s\n", decrypt_string(AUGUSTUS, encrypt_string(AUGUSTUS, "gusty", "11"), "11"));
 
     string *str = encrypt_string(CAESAR, "gusty !15:","2");
     printf("%s\n", str->plain);
