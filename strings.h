@@ -1,11 +1,10 @@
 #ifndef _MY_STRING_H_
-
-
 #define _MY_STRING_H_
+
 typedef enum cipher { CAESAR, AUGUSTUS, AES } cipher;
 typedef enum string_type { PLAIN, CIPHER } string_type;
-
 typedef struct string string;
+
 typedef struct string {
   	char *plain;
   	char *cipher;

@@ -129,24 +129,8 @@ void static print_string(string *s, string_type st) {
     if (st == CIPHER) {
         a = s->cipher;
     }
-    /*for (int section = 0; section < s->len; section+=16) {
-        for (int x = section; x < section+16; x++) {
-            //printf("%.2x ", a[x]);
-            if (a[x] == 0) {
-                printf("00 ");
-            } else {
-                printf("%02x ", a[x] & 0xff);
-            }
-            if ((x+1)%16 == 0) {
-                printf("\t|\t");
-                for (int y = section; y < section+16; y++) {
-                    printf("%c", a[y]);
-                }
-                printf("\n");
-            }
-        }
-    }*/
-    int i;
+    
+	int i;
     int sec;
     for (sec = 0; sec < s->len; sec+=16) {
         for (i = sec; i < sec+16; i++)
@@ -167,14 +151,4 @@ void static print_string(string *s, string_type st) {
     
     }
     
-    /*for (int i = 16; i < 32; i++)
-        printf("%.2x " , a[i] & 0xff);
-    printf(" | ");
-    for (int i = 16; i < 32; i++)
-        if (isprint(a[i]))
-            printf("%c" , a[i]);
-        else
-            printf(" ");
-    printf("\n");*/
-
 }

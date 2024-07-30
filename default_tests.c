@@ -6,8 +6,12 @@
 #include "strings.h"
 #include "aes_cbc.h"
 
-void default_tests() {
-    printf("ceasarEncrypt(gusty, 1): %s\n", caesar_encrypt("gusty", "1"));
+//void default_tests() {
+void main() {
+	// MY TESTS
+		printf("augustusEncrypt(Hello!, 13): %s\n", augustus_encrypt("Hello!", "13"));
+	//
+	printf("ceasarEncrypt(gusty, 1): %s\n", caesar_encrypt("gusty", "1"));
     printf("ceasarEncrypt(gusty, 27): %s\n", caesar_encrypt("gusty", "27"));
     printf("ceasarEncrypt(gusty, 3): %s\n", caesar_encrypt("gusty", "3"));
     printf("ceasarEncrypt(gusty, 29): %s\n", caesar_encrypt("gusty", "29"));

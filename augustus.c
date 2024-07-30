@@ -4,36 +4,27 @@
 #include "caesar.h"
 
 char *augustus_encrypt(char *plain, char *key) {
-    char *initEnc;
-    initEnc = caesar_encrypt(plain, key);
+	char* cipher;
+	cipher = caesar_encrypt(plain, key); // Step 1: run through normal caesar cipher
 
-    int keyPos = 0;
-    char *finalEnc = malloc(sizeof(plain)+1);
-    /*char **keyDigitChars = malloc(strlen(key));
-    char **keyDigitInts = malloc(strlen(key));
-    for (int i = 0; i < strlen(key); i++) {
-        keyDigitChars[i] = &initEnc[i];
-    }
-    for (int i = 0; i < strlen(key); i++) {
-        *keyDigitInts[i] = atoi(keyDigitChars[i]);
-    }
-    */
-    char temp;
-    for (int i = 0; i < strlen(plain); i++) {
-        temp = key[keyPos];
-        if (initEnc[i] == 32) {
-            finalEnc[i] = initEnc[i];
-        } else {
-            finalEnc[i] = caesar_encrypt_char(initEnc[i], atoi(&temp));
-        }
-        if (keyPos == (strlen(key)-2)) {
-            keyPos = 0;
-            continue;
-        } else {
-            keyPos++;
-        }
-    }
-    return finalEnc;
+	char* char_ptr;
+	char* curr_char = calloc(2, sizeof(char)); // set up to send individual chars
+	*(curr_char+1) = '\0';
+	char* curr_key_digit = calloc(2, sizeof(char)); // set up to send individual digits of key
+	*(curr_key_digit+1) = '\0';
+	
+
+	for (int i = 0; i < strlen(cipher); i++) { // Step 2: for every char in message
+		*curr_char = *(cipher+i);
+		*curr_key_digit = *(key+(i%strlen(key)));
+		char_ptr = caesar_encrypt(curr_char, curr_key_digit);
+		*(cipher + i) = *char_ptr;
+		free(char_ptr);
+	}
+
+	free(curr_char);
+	free(curr_key_digit);
+	return cipher;
 }
 
 char *augustus_decrypt(char *cipher, char *key) {
