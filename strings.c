@@ -86,18 +86,23 @@ string *encrypt_string(cipher c, char *s, char *key) {
     	new_string->cipher = calloc(new_string->len+1, sizeof(char)); // prep memory for cipher (+1 for '\0')
         strcpy(new_string->cipher, augustus_encrypt(s, key)); // copy encrypted plain to cipher
     
-	} else { // if AES @@@@@@
-		struct AES_ctx *a = malloc(sizeof(struct AES_ctx));
-    	char *newiv = calloc(16, sizeof(char));
+	} else { // if AES @@@@@@	
+
+		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx));
+    	uint8_t *newiv = calloc(16, sizeof(uint8_t));
 		setiv_string(newiv);
-		AES_init_ctx_iv(a, key, newiv);
-		char *buf = malloc(sizeof(new_string->plain));
-		strcpy(buf, new_string->plain);
-		AES_CBC_encrypt_buffer(a, buf, new_string->len);
-		strcpy(new_string->cipher, buf);
-		free(a);
+		AES_init_ctx_iv(new_AES, key, newiv);
+		
+		uint8_t *buf = malloc(new_string->len);
+		memcpy(buf, new_string->plain, new_string->len);
+		AES_CBC_encrypt_buffer(new_AES, buf, new_string->len);
+		
+		new_string->cipher = malloc(new_string->len);
+		memcpy(new_string->cipher, buf, new_string->len);
+		free(new_AES);
 		free(newiv);
 		free(buf);
+
 	}
     return new_string;
 
@@ -117,15 +122,23 @@ char *decrypt_string(cipher c, string *str, char *key) {
         strcpy(str->plain, augustus_decrypt(str->cipher, key)); // copy encrypted plain to plain
     
 	} else { // if AES @@@@@@
-        struct AES_ctx ctx;
-        uint8_t in[(str->len)];
-        uint8_t iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-        memcpy(in, str->cipher, str->len);
-    
-        AES_init_ctx_iv(&ctx, key, iv);
-        AES_CBC_decrypt_buffer(&ctx, in, 16);
-        
-        memcpy(str->cipher, in, str->len);
+		
+		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx));
+    	uint8_t *newiv = calloc(16, sizeof(uint8_t));
+		setiv_string(newiv);
+		AES_init_ctx_iv(new_AES, key, newiv);
+	
+		uint8_t *buf = malloc(str->len);
+		memcpy(buf, str->cipher, str->len);
+		AES_CBC_decrypt_buffer(new_AES, (uint8_t *)buf, str->len);
+		
+		free(str->plain);
+		str->plain = malloc(str->len);
+		memcpy(str->plain, buf, str->len);
+		free(new_AES);
+		free(newiv);
+		return(buf);
+
     }
     return str->plain;
 
@@ -134,10 +147,11 @@ char *decrypt_string(cipher c, string *str, char *key) {
 
 
 void setiv_string(char *newiv) {
-    uint8_t temp[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };	
+    /*uint8_t temp[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };	
 	for (int i = 0; i < 16; i++) {
 		*(newiv + i) = temp[i];
-	}
+	}*/
+	memcpy(newiv, "0123456789ABCDEF", 16);
 }
 
 
@@ -169,26 +183,26 @@ void print_C_string(char *s) {
 
 
 void static print_string(string *s, string_type st) {
-    char *a = s->plain;
-
+    char *text = s->plain;
+	
     if (st == CIPHER) {
-        a = s->cipher;
+        text = s->cipher;
     }
     
 	int i;
-    int sec;
-    for (sec = 0; sec < s->len; sec+=16) {
-        for (i = sec; i < sec+16; i++)
+    int row;
+    for (row = 0; row < s->len; row+=16) {
+        for (i = row; i < row+16; i++)
             if (i >= s->len) {
                 printf("_0 ");
                 continue;
             } else {
-                printf("%.2x " , a[i] & 0xff);
+                printf("%.2x " , text[i] & 0xff);
             }
         printf(" | ");
-        for (int i = sec; i < sec+16; i++)
-            if (isprint(a[i]))
-                printf("%c" , a[i]);
+        for (int i = row; i < row+16; i++)
+            if (isprint(text[i]))
+                printf("%c" , text[i]);
             else
                 printf(" ");
         
