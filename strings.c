@@ -15,7 +15,7 @@ void static print_string(string* s, string_type st);
 
 
 /*
- * Initializes string->plain, with or without 16-byte buffer.
+ * Creates new string and initializes string->plain, with or without 16-byte buffer.
  */
 string *new_plain(char *s, int roundup) {
 	
@@ -44,7 +44,7 @@ string *new_plain(char *s, int roundup) {
 
 
 /*
- *
+ * Creates new string and initializes string->cipher, with or without 16-byte buffer
  */
 string *new_cipher(char *s, int len, int roundup) {
 	
@@ -74,7 +74,8 @@ string *new_cipher(char *s, int len, int roundup) {
 
 
 /*
- *
+ * Creates and returns a new string.
+ * Initializes string->plain with given string, and string->cipher using the specified cipher and key.
  */
 string *encrypt_string(cipher c, char *s, char *key) {
 	
@@ -95,20 +96,24 @@ string *encrypt_string(cipher c, char *s, char *key) {
 		new_string->cipher = calloc(new_string->len+1, sizeof(char)); // prep memory for cipher (+1 for '\0')
 		strcpy(new_string->cipher, augustus_encrypt(s, key)); // copy encrypted plain to cipher
 	
-	} else { // if AES @@@@@@	
+	} else { // if AES
+		
+		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx)); // create AES_ctx for encryption
 
-		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx));
-		uint8_t *newiv = calloc(16, sizeof(uint8_t));
+		uint8_t *newiv = calloc(16, sizeof(uint8_t)); // prepare initialization vector
 		setiv_string(newiv);
-		AES_init_ctx_iv(new_AES, key, newiv);
 		
-		uint8_t *buf = malloc(new_string->len);
+		AES_init_ctx_iv(new_AES, key, newiv); // initialize AES_ctx
+		
+		uint8_t *buf = malloc(new_string->len); // buffer to send plain, receive encrypted
 		memcpy(buf, new_string->plain, new_string->len);
-		AES_CBC_encrypt_buffer(new_AES, buf, new_string->len);
 		
-		new_string->cipher = malloc(new_string->len);
+		AES_CBC_encrypt_buffer(new_AES, buf, new_string->len); // encrypt
+		
+		new_string->cipher = malloc(new_string->len); // put encryption in string->cipher
 		memcpy(new_string->cipher, buf, new_string->len);
-		free(new_AES);
+
+		free(new_AES); // free memory
 		free(newiv);
 		free(buf);
 
@@ -120,34 +125,39 @@ string *encrypt_string(cipher c, char *s, char *key) {
 
 
 /*
- *
+ * Returns decrypted string->cipher using the specified cipher and key.
+ * Copies decrypted message into string->plain.
  */
 char *decrypt_string(cipher c, string *str, char *key) {
 		
 	// load in plain
 	if (c == CAESAR) { // if caesar
 		str->plain = calloc(str->len+1, sizeof(char)); // prep memory for plain (+1 for '\0')
-		strcpy(str->plain, caesar_decrypt(str->cipher, key)); // copy encrypted plain to plain
+		strcpy(str->plain, caesar_decrypt(str->cipher, key)); // copy decrypted cipher to plain
 
 	} else if (c == AUGUSTUS) { // if augustus
 		str->plain = calloc(str->len+1, sizeof(char)); // prep memory for plain (+1 for '\0')
-		strcpy(str->plain, augustus_decrypt(str->cipher, key)); // copy encrypted plain to plain
+		strcpy(str->plain, augustus_decrypt(str->cipher, key)); // copy decrypted cipher to plain
 	
-	} else { // if AES @@@@@@
+	} else { // if AES
 		
-		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx));
-		uint8_t *newiv = calloc(16, sizeof(uint8_t));
+		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx)); // create AES_ctx for decryption
+		
+		uint8_t *newiv = calloc(16, sizeof(uint8_t)); // prepare initialization vector
 		setiv_string(newiv);
-		AES_init_ctx_iv(new_AES, key, newiv);
-	
-		uint8_t *buf = malloc(str->len);
-		memcpy(buf, str->cipher, str->len);
-		AES_CBC_decrypt_buffer(new_AES, (uint8_t *)buf, str->len);
 		
-		free(str->plain);
+		AES_init_ctx_iv(new_AES, key, newiv); // initialize AES_ctx
+	
+		uint8_t *buf = malloc(str->len); // buffer to send encrypted, receive plain
+		memcpy(buf, str->cipher, str->len);
+
+		AES_CBC_decrypt_buffer(new_AES, (uint8_t *)buf, str->len); // decrypt
+		
+		free(str->plain); // free put plain in string->plain
 		str->plain = malloc(str->len);
 		memcpy(str->plain, buf, str->len);
-		free(new_AES);
+
+		free(new_AES); // free memory
 		free(newiv);
 		return(buf);
 
@@ -159,7 +169,7 @@ char *decrypt_string(cipher c, string *str, char *key) {
 
 
 /*
- *
+ * Copies default initialization vector into iv.
  */
 void setiv_string(char *newiv) {
 	memcpy(newiv, "lifeisgoodsmtms.", 16);
@@ -168,14 +178,16 @@ void setiv_string(char *newiv) {
 
 
 /*
- *
+ * Prints given string using hex, then plain text, in rows of 16 characters.
  */
 void print_C_string(char *s) {
-	int i;
-	int sec;
-	printf("%s\n", s);
-	for (sec = 0; sec < strlen(s); sec+=16) {
-		for (i = sec; i < sec+16; i++)
+	
+	int i; // columns
+	int row; // rows
+	
+	//printf("%s\n", s);
+	for (row = 0; row < strlen(s); row+=16) {
+		for (i = row; i < row+16; i++)
 			if (i >= strlen(s)) {
 				printf("_0 ");
 				continue;
@@ -183,7 +195,7 @@ void print_C_string(char *s) {
 				printf("%.2x " , s[i] & 0xff);
 			}
 		printf(" | ");
-		for (int i = sec; i < sec+16; i++)
+		for (int i = row; i < row+16; i++)
 			if (isprint(s[i]))
 				printf("%c" , s[i]);
 			else
@@ -197,29 +209,39 @@ void print_C_string(char *s) {
 
 
 /*
- *
+ * Prints either string->plain or string->cipher.
+ * First uses hex, then plain text, in rows of 16 characters.
  */
 void static print_string(string *s, string_type st) {
-	char *text = s->plain;
 	
+	//plain or cipher
+	char *text = s->plain;
 	if (st == CIPHER) {
 		text = s->cipher;
 	}
 	
-	int i;
-	int row;
-	for (row = 0; row < s->len; row+=16) {
-		for (i = row; i < row+16; i++)
+	int i; // columns
+	int row; // rows
+	
+	for (row = 0; row < s->len; row+=16) { // new rows until greater than string->len
+		for (i = row; i < row+16; i++) // 16 columns per row
+			
+			// if no more chars, print "_0"
 			if (i >= s->len) {
 				printf("_0 ");
 				continue;
+			// else print char (hex)
 			} else {
-				printf("%.2x " , text[i] & 0xff);
+				printf("%.2x " , text[i] & 0xff); 
 			}
+
 		printf(" | ");
-		for (int i = row; i < row+16; i++)
+
+		for (int i = row; i < row+16; i++) // 16 more columns
+			// if char is text, print
 			if (isprint(text[i]))
 				printf("%c" , text[i]);
+			// else print " "
 			else
 				printf(" ");
 		

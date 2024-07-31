@@ -139,7 +139,7 @@ void main(int argc, char *argv[]) {
 		printf("\nDefault Keys:\n");
 		printf("Caesar: 1\n");
 		printf("Augustus: 12\n");
-		printf("AES: 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6\n	 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c\n");
+		printf("AES: 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6\n     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c\n");
 		printf("\n");
 
 	int running = 1;
@@ -223,11 +223,11 @@ void main(int argc, char *argv[]) {
 			}
 			
 			
-			printf("\nPlain text string:\nlen = %d\n", ms->len);
+			printf("\nPlain text string:\nlen: %d\n", ms->len);
 			ms->print(ms, PLAIN);
 
 			string *b = ms->encrypt(cipher_type, in_s, in_k);
-			printf("\nCipher text string:\nlen = %d\n", ms->len);
+			printf("\nCipher text string:\nlen: %d\n", ms->len);
 			b->print(b, CIPHER);
 
 			char *s = b->decrypt(cipher_type, b, in_k);
@@ -238,7 +238,7 @@ void main(int argc, char *argv[]) {
 			print_C_string(s);
 			printf("\nlen: %lu\n", strlen(s));
 			b->print(b, PLAIN);
-			printf("\n");
+			printf("\n\n\n");
 
 			free(ms->plain);
 			free(ms->cipher);
