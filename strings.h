@@ -6,10 +6,10 @@ typedef enum string_type { PLAIN, CIPHER } string_type;
 typedef struct string string;
 
 typedef struct string {
-  	char *plain;
-  	char *cipher;
+	char *plain;
+	char *cipher;
 	int len;
-	void    (*print)(string *, string_type);
+	void	(*print)(string *, string_type);
 	string* (*encrypt)(cipher c, char *s, char *key);
 	char *  (*decrypt)(cipher c, string *s, char *key);
 } string;

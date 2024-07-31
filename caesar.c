@@ -135,28 +135,28 @@ char caesar_decrypt_char(char cipher, int key) {
  */
 int convert_key(char *key) {
 
-    int len = strlen(key);
-    int hasLetters = 0;
+	int len = strlen(key);
+	int hasLetters = 0;
 	
 	// check if key has letters (if not, simple conversion to int)
-    for (int i = 0; i<len; i++) {
-        if (key[i] > 57 || key[i] < 48) {
-            hasLetters = 1;
+	for (int i = 0; i<len; i++) {
+		if (key[i] > 57 || key[i] < 48) {
+			hasLetters = 1;
 			break;
-        }
-    }
+		}
+	}
 
 	// if key has letters, starting with 0, xor through chars to generate key
-    if (hasLetters) {
-        char *ans = malloc(sizeof(char));
+	if (hasLetters) {
+		char *ans = malloc(sizeof(char));
 		*ans = 0;
-        for (int i = 0; i < len; i++) {
-            *ans = *ans^key[i];
+		for (int i = 0; i < len; i++) {
+			*ans = *ans^key[i];
 		}
-        int final_ans = (int) 0 | *ans;	// so I can free ans
+		int final_ans = (int) 0 | *ans;	// so I can free ans
 		free(ans);
 		return final_ans;
-    }
+	}
 
-    return atoi(key); // simple conversion
+	return atoi(key); // simple conversion
 }
