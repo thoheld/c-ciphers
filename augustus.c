@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include "caesar.h"
 
+
+
+/*
+ * Encrypts a string using the augustus cipher.
+ * Returns pointer to encrypted string.
+ */
 char *augustus_encrypt(char *plain, char *key) {
 	char* cipher;
 	cipher = caesar_encrypt(plain, key); // Step 1: run through normal caesar cipher
@@ -27,6 +33,12 @@ char *augustus_encrypt(char *plain, char *key) {
 	return cipher;
 }
 
+
+
+/*
+ * Decrypts a string using the augustus cipher.
+ * Returns pointer to decrypted string.
+ */
 char *augustus_decrypt(char *cipher, char *key) {
 	char* plain = calloc(strlen(cipher)+1, sizeof(char));
 	strcpy(plain, cipher); // initialize plain with cipher message
