@@ -14,6 +14,9 @@ void static print_string(string* s, string_type st);
 
 
 
+/*
+ * Initializes string->plain, with or without 16-byte buffer.
+ */
 string *new_plain(char *s, int roundup) {
 	
 	string *new_string = malloc(sizeof(string));
@@ -40,6 +43,9 @@ string *new_plain(char *s, int roundup) {
 
 
 
+/*
+ *
+ */
 string *new_cipher(char *s, int len, int roundup) {
 	
 	string *new_string = malloc(sizeof(string));
@@ -67,6 +73,9 @@ string *new_cipher(char *s, int len, int roundup) {
 
 
 
+/*
+ *
+ */
 string *encrypt_string(cipher c, char *s, char *key) {
 	
 	// set up the new string and load in plain
@@ -110,6 +119,9 @@ string *encrypt_string(cipher c, char *s, char *key) {
 
 
 
+/*
+ *
+ */
 char *decrypt_string(cipher c, string *str, char *key) {
 		
 	// load in plain
@@ -146,12 +158,18 @@ char *decrypt_string(cipher c, string *str, char *key) {
 
 
 
+/*
+ *
+ */
 void setiv_string(char *newiv) {
 	memcpy(newiv, "lifeisgoodsmtms.", 16);
 }
 
 
 
+/*
+ *
+ */
 void print_C_string(char *s) {
 	int i;
 	int sec;
@@ -178,6 +196,9 @@ void print_C_string(char *s) {
 
 
 
+/*
+ *
+ */
 void static print_string(string *s, string_type st) {
 	char *text = s->plain;
 	
