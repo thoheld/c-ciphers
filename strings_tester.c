@@ -11,7 +11,7 @@ void segment_one_processor();
 void segment_two_processor();
 void AES_key_filter();
 
-void main(int argc, char *argv[]) { 
+int main(int argc, char *argv[]) { 
 	
 	cipher cipher_type = CAESAR;
 	
@@ -100,7 +100,7 @@ void main(int argc, char *argv[]) {
 					in_k[2] = '\0';
 					printf("Using default key.\n");
 				} else if (cipher_type == AES) {
-					uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+					char def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
 					strcpy(in_k, def_aes_k);
 					printf("Using default key.\n");
 				}
@@ -139,6 +139,7 @@ void main(int argc, char *argv[]) {
 			free(b);
 
 		}
+	return 0;
 	}
 
 
@@ -154,9 +155,12 @@ void file_input(char *file_name) {
 	int ready_to_print = 0; // 0 or 1
 	int *encrypt_or_decrypt = malloc(sizeof(int)); // 1 for encrypt, 2 for decrypt
 	cipher *encryption_method = malloc(sizeof(cipher));
-	char *key;
+	char *key = NULL;
+	char *plain = NULL;
 
 	while (fgets(line, 200, file)) { // next line in file
+		
+		line[strlen(line)-1] = '\0'; // replace '\n' with '\0'
 		
 		if (ready_to_print) {
 			//print here
@@ -171,12 +175,14 @@ void file_input(char *file_name) {
 		
 		// second segment (key)
 		} else if (triplet_segment == 2) { // second segment
-			segment_two_processor(line, key, *encryption_method);
+			segment_two_processor(line, &key, *encryption_method);
 			triplet_segment = 3; // next segment
 
 		// third segment (message)
 		} else if (triplet_segment == 3) { // last segment
-
+			
+			plain = malloc(strlen(line) + 1);
+			strcpy(plain, line);
 			ready_to_print = 1; // all 3 segments processed, ready to print
 			triplet_segment = 1; // back to first segment
 
@@ -334,38 +340,66 @@ void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encrypti
 /*
  * Process second segment of triplet.
 */
-void segment_two_processor(char *line, char *key, cipher encryption_method) {
+void segment_two_processor(char *line, char **key, cipher encryption_method) {
 	
-	if (key != NULL) {
-		free(key);
+	if (*key != NULL) {
+		free(*key);
+		*key = NULL;
 	}
 	
 	// default key
 	if(strcmp(line, "default\n") == 0) {
 		if (encryption_method == CAESAR) {
-			key = malloc(2);
-			*key = "1";
+			*key = malloc(2);
+			strcpy(*key, "1");
+		
 		} else if (encryption_method == AUGUSTUS) {
-			key = malloc(3);
-			key = "12";
+			*key = malloc(3);
+			strcpy(*key, "12");
+		
 		} else {
-			key = malloc(16);
-			key = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+			*key = malloc(16);
+			char temp_key[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+			memcpy(*key, temp_key, 16);
 		}
 		return;
 	}
 	
 	// make sure AES key is proper
 	if (encryption_method == AES) {
-		AES_key_filter(key);
+		AES_key_filter(line, key); // key here is double pointer
+		return;
 	}
 
 	// caesar and augustus keys
-	key = malloc(strlen(line) + 1);
-	strcpy(key, line);
+	*key = malloc(strlen(line) + 1);
+	strcpy(*key, line);
 
 }
 
-void AES_key_filter(char *key) {
-	return;
+
+
+/*
+ * Ensures key is 16 bytes.
+ */
+void AES_key_filter(char *line, char **key) {
+	
+	*key = malloc(16);
+	//printf("%lu", strlen(line));
+	// if 16 or more chars given, use first 16 chars for key
+	if (strlen(*key) >= 16) {
+		memcpy(*key, line, 16);
+		return;
+	}
+	
+	// add all given chars to key
+	int index = 0;
+	for (; index < strlen(line); index++) {
+		memcpy((*key + index), (line + index), 1);
+	}
+	// and fill remaining slots with '0'
+	for (; index < 16; index++) {
+		*(*key + index) = '0';
+	}
+
 }

@@ -100,10 +100,10 @@ string *encrypt_string(cipher c, char *s, char *key) {
 		
 		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx)); // create AES_ctx for encryption
 
-		uint8_t *newiv = calloc(16, sizeof(uint8_t)); // prepare initialization vector
+		char *newiv = calloc(16, sizeof(uint8_t)); // prepare initialization vector
 		setiv_string(newiv);
 		
-		AES_init_ctx_iv(new_AES, key, newiv); // initialize AES_ctx
+		AES_init_ctx_iv(new_AES, (uint8_t *)key, (uint8_t *)newiv); // initialize AES_ctx
 		
 		uint8_t *buf = malloc(new_string->len); // buffer to send plain, receive encrypted
 		memcpy(buf, new_string->plain, new_string->len);
@@ -143,10 +143,10 @@ char *decrypt_string(cipher c, string *str, char *key) {
 		
 		struct AES_ctx *new_AES = malloc(sizeof(struct AES_ctx)); // create AES_ctx for decryption
 		
-		uint8_t *newiv = calloc(16, sizeof(uint8_t)); // prepare initialization vector
+		char *newiv = calloc(16, sizeof(uint8_t)); // prepare initialization vector
 		setiv_string(newiv);
 		
-		AES_init_ctx_iv(new_AES, key, newiv); // initialize AES_ctx
+		AES_init_ctx_iv(new_AES, (uint8_t *)key, (uint8_t *)newiv); // initialize AES_ctx
 	
 		uint8_t *buf = malloc(str->len); // buffer to send encrypted, receive plain
 		memcpy(buf, str->cipher, str->len);
@@ -159,7 +159,7 @@ char *decrypt_string(cipher c, string *str, char *key) {
 
 		free(new_AES); // free memory
 		free(newiv);
-		return(buf);
+		return((char *)buf);
 
 	}
 	return str->plain;
