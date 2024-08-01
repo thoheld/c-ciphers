@@ -6,141 +6,32 @@
 #include "aes_cbc.h"
 
 void default_tests();
+void file_input();
+void segment_one_processor();
+void segment_two_processor();
+void AES_key_filter();
 
 void main(int argc, char *argv[]) { 
 	
 	cipher cipher_type = CAESAR;
 	
 	if (argc > 1) {
+
 		if (strcmp(argv[1], "default") == 0) {
-			printf("default\n");
 			default_tests();
 			exit(1);
+		
 		} else if (strcmp(argv[1], "ciphers.txt") == 0) {
-			
-			FILE *file = fopen("ciphers.txt", "r");
-			char line[200];
-			int tripNum = 1;
-			int tripSeg = 1;
-			char *p1;
-			char *p2;
-			int op;
-			char ops[10];
-			cipher c;
-			char cs[10];
-			char k[120];
-			char s[200];
-			string *p;
-
-			while (fgets(line, 200, file)){
-				if (tripSeg == 4) { // ready to print
-					if (op == 1) {
-						strcpy(ops, "Encrypt");
-					} else {
-						strcpy(ops, "Decrypt");
-					}
-
-					if (c == CAESAR) {
-						strcpy(cs, "Caesar"); 
-					} else if (c == AUGUSTUS) {
-						strcpy(cs, "Augustus"); 
-					} else {
-						strcpy(cs, "AES"); 
-					}
-
-					printf("Triplet %d: Cipher: %s, %s len: %lu\n", tripNum, cs, ops, strlen(s));
-				   
-					if (op == 1) {
-						p = encrypt_string(c, s, k);
-						print_C_string(p->cipher);
-						free(p->plain);
-						free(p->cipher);
-						free(p);
-					}  else if (op == 2) {
-						if (c == AES) {
-							p = new_cipher(s, strlen(s), 1);
-							print_C_string(p->decrypt(c, p, k));
-							free(p->cipher);
-							free(p);
-						} else {
-							p = new_cipher(s, strlen(s), 0);
-							print_C_string(p->decrypt(c, p, k));
-							free(p->cipher);
-							free(p);
-						}
-					}
-
-					printf("\n");
-					tripSeg = 1;
-					tripNum++;
-				}
-
-				if (line[0] == '#') continue; // skip # comments
-			   
-
-				if (tripSeg == 1) { // reading cipher and operation
-					p1 =  strtok(line, " ");
-					p2 =  strtok(NULL, " ");
-					if (strcmp(p1, "encrypt") == 0) {
-						op = 1;
-					} else {
-						op = 2;
-					}
-
-					if (strcmp(p2, "caesar\n") == 0) {
-						c = CAESAR;
-					} else if(strcmp(p2, "augustus\n") == 0) {
-						c = AUGUSTUS;
-					} else {
-						c = AES;
-					} 
-					tripSeg = 2;
-
-
-				} else if (tripSeg == 2) { // reading key
-				strcpy(k, calloc(120, sizeof(char))); // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ changing this changed it
-					if(strcmp(line, "default\n") == 0) {
-						if (c == CAESAR) {
-							k[0] = '1';
-						} else if (c == AUGUSTUS) {
-							strcpy(k, "12"); // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ this doesnt work :(
-						} else {
-							uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-							strcpy(k, def_aes_k);
-						}
-					} else {
-						line[strcspn(line, "\n")] = '\0';  // replace \n with \0
-						strcpy(k, line);
-						if (c == AES) { // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ i have no idea what to do here
-							/*char actual_key[16];
-							char val = 0;
-							for (int i = 0; i < 48; i+=3) {
-								actual_key[i/3] = atoi()
-							}*/
-							uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-							strcpy(k, def_aes_k);
-
-						}
-					}
-					tripSeg = 3;
-
-
-				} else if (tripSeg == 3){ // reading string
-					strcpy(s, line);
-					s[strcspn(s, "\n")] = '\0';  // replace \n with \0
-					tripSeg = 4;
-				}
-			}
-
-			fclose(file);
-			exit(1);
+			file_input(argv[1]);
 		}
-	} else {
-		printf("\nDefault Keys:\n");
-		printf("Caesar: 1\n");
-		printf("Augustus: 12\n");
-		printf("AES: 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6\n     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c\n");
-		printf("\n");
+	
+	}
+			
+	printf("\nDefault Keys:\n");
+	printf("Caesar: 1\n");
+	printf("Augustus: 12\n");
+	printf("AES: 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6\n     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c\n");
+	printf("\n");
 
 	int running = 1;
 	while (running) {   
@@ -250,4 +141,231 @@ void main(int argc, char *argv[]) {
 		}
 	}
 
+
+
+/*
+ * File handler
+ */
+void file_input(char *file_name) {
+	
+	FILE *file = fopen(file_name, "r");
+	char line[200]; // store line
+	int triplet_segment = 1; // 1, 2, or 3
+	int ready_to_print = 0; // 0 or 1
+	int *encrypt_or_decrypt = malloc(sizeof(int)); // 1 for encrypt, 2 for decrypt
+	cipher *encryption_method = malloc(sizeof(cipher));
+	char *key;
+
+	while (fgets(line, 200, file)) { // next line in file
+		
+		if (ready_to_print) {
+			//print here
+		}
+		
+		if (line[0] == '#') continue; // skip # comments
+
+		// first segment (encrypt/decrypt and cipher)
+		if (triplet_segment == 1) {
+			segment_one_processor(line, encrypt_or_decrypt, encryption_method);
+			triplet_segment = 2; // next segment
+		
+		// second segment (key)
+		} else if (triplet_segment == 2) { // second segment
+			segment_two_processor(line, key, *encryption_method);
+			triplet_segment = 3; // next segment
+
+		// third segment (message)
+		} else if (triplet_segment == 3) { // last segment
+
+			ready_to_print = 1; // all 3 segments processed, ready to print
+			triplet_segment = 1; // back to first segment
+
+		}
+
+	}
+
+	exit(1);
+
+	/*FILE *file = fopen("ciphers.txt", "r");
+	char line[200];
+	int tripNum = 1;
+	int tripSeg = 1;
+	char *p1;
+	char *p2;
+	int op;
+	char ops[10];
+	cipher c;
+	char cs[10];
+	char k[120];
+	char s[200];
+	string *p;
+
+	while (fgets(line, 200, file)){
+		if (tripSeg == 4) { // ready to print
+			if (op == 1) {
+				strcpy(ops, "Encrypt");
+			} else {
+				strcpy(ops, "Decrypt");
+			}
+
+			if (c == CAESAR) {
+				strcpy(cs, "Caesar"); 
+			} else if (c == AUGUSTUS) {
+				strcpy(cs, "Augustus"); 
+			} else {
+				strcpy(cs, "AES"); 
+			}
+
+			printf("Triplet %d: Cipher: %s, %s len: %lu\n", tripNum, cs, ops, strlen(s));
+		   
+			if (op == 1) {
+				p = encrypt_string(c, s, k);
+				print_C_string(p->cipher);
+				free(p->plain);
+				free(p->cipher);
+				free(p);
+			}  else if (op == 2) {
+				if (c == AES) {
+					p = new_cipher(s, strlen(s), 1);
+					print_C_string(p->decrypt(c, p, k));
+					free(p->cipher);
+					free(p);
+				} else {
+					p = new_cipher(s, strlen(s), 0);
+					print_C_string(p->decrypt(c, p, k));
+					free(p->cipher);
+					free(p);
+				}
+			}
+
+			printf("\n");
+			tripSeg = 1;
+			tripNum++;
+		}
+
+		if (line[0] == '#') continue; // skip # comments
+	   
+
+		if (tripSeg == 1) { // reading cipher and operation
+			p1 =  strtok(line, " ");
+			p2 =  strtok(NULL, " ");
+			if (strcmp(p1, "encrypt") == 0) {
+				op = 1;
+			} else {
+				op = 2;
+			}
+
+			if (strcmp(p2, "caesar\n") == 0) {
+				c = CAESAR;
+			} else if(strcmp(p2, "augustus\n") == 0) {
+				c = AUGUSTUS;
+			} else {
+				c = AES;
+			} 
+			tripSeg = 2;
+
+
+		} else if (tripSeg == 2) { // reading key
+		strcpy(k, calloc(120, sizeof(char))); // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ changing this changed it
+			if(strcmp(line, "default\n") == 0) {
+				if (c == CAESAR) {
+					k[0] = '1';
+				} else if (c == AUGUSTUS) {
+					strcpy(k, "12"); // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ this doesnt work :(
+				} else {
+					uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+					strcpy(k, def_aes_k);
+				}
+			} else {
+				line[strcspn(line, "\n")] = '\0';  // replace \n with \0
+				strcpy(k, line);
+				if (c == AES) { // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ i have no idea what to do here
+					//char actual_key[16];
+					//char val = 0;
+					//for (int i = 0; i < 48; i+=3) {
+						//actual_key[i/3] = atoi()
+					//}
+					uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+					strcpy(k, def_aes_k);
+
+				}
+			}
+			tripSeg = 3;
+
+
+		} else if (tripSeg == 3){ // reading string
+			strcpy(s, line);
+			s[strcspn(s, "\n")] = '\0';  // replace \n with \0
+			tripSeg = 4;
+		}
+	}
+
+	fclose(file);
+	exit(1);*/
+}
+
+
+
+/*
+ * Process first segment of triplet.
+*/
+void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encryption_method) {
+	
+	char *str_encrypt_or_decrypt =  strtok(line, " ");
+	if (strcmp(str_encrypt_or_decrypt, "encrypt") == 0) {
+		*encrypt_or_decrypt = 1;
+	} else {
+		*encrypt_or_decrypt = 2;
+	}
+
+	char *str_encryption_method =  strtok(NULL, " ");
+	if (strcmp(str_encryption_method, "caesar\n") == 0) {
+		*encryption_method = CAESAR;
+	} else if (strcmp(str_encryption_method, "augustus\n") == 0) {
+		*encryption_method = AUGUSTUS;
+	} else {
+		*encryption_method = AES;
+	}
+
+}
+
+
+
+/*
+ * Process second segment of triplet.
+*/
+void segment_two_processor(char *line, char *key, cipher encryption_method) {
+	
+	if (key != NULL) {
+		free(key);
+	}
+	
+	// default key
+	if(strcmp(line, "default\n") == 0) {
+		if (encryption_method == CAESAR) {
+			key = malloc(2);
+			*key = "1";
+		} else if (encryption_method == AUGUSTUS) {
+			key = malloc(3);
+			key = "12";
+		} else {
+			key = malloc(16);
+			key = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+		}
+		return;
+	}
+	
+	// make sure AES key is proper
+	if (encryption_method == AES) {
+		AES_key_filter(key);
+	}
+
+	// caesar and augustus keys
+	key = malloc(strlen(line) + 1);
+	strcpy(key, line);
+
+}
+
+void AES_key_filter(char *key) {
+	return;
 }
