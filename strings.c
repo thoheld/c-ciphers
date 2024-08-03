@@ -52,11 +52,11 @@ string *new_cipher(char *s, int len, int roundup) {
 	
 	// either set up buffered cipher memory
 	if (roundup) {
-		new_string->len = strlen(s) + (16 - (strlen(s)%16));
+		new_string->len = len + (16 - (strlen(s)%16));
 		new_string->cipher = calloc(new_string->len, sizeof(char));
 	// or normal cipher memory
 	} else {
-		new_string->len = strlen(s);
+		new_string->len = len;
 		new_string->cipher = calloc(new_string->len+1, sizeof(char));
 	}
 	// copy given message to cipher
