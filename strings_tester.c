@@ -294,7 +294,7 @@ void file_input(char *file_name) {
 			} else {
 				line[strcspn(line, "\n")] = '\0';  // replace \n with \0
 				strcpy(k, line);
-				if (c == AES) { // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ i have no idea what to do here
+				if (c == AES) { // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ i have no idea what to do rere
 					//char actual_key[16];
 					//char val = 0;
 					//for (int i = 0; i < 48; i+=3) {
@@ -339,7 +339,6 @@ void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encrypti
 	} else if (strcmp(str_encryption_method, "augustus") == 0) {
 		*encryption_method = AUGUSTUS;
 	} else {
-		printf("here");
 		*encryption_method = AES;
 	}
 
@@ -358,7 +357,7 @@ void segment_two_processor(char *line, char **key, cipher encryption_method) {
 	}
 	
 	// default key
-	if(strcmp(line, "default\n") == 0) {
+	if(strcmp(line, "default") == 0) {
 		if (encryption_method == CAESAR) {
 			*key = malloc(2);
 			strcpy(*key, "1");
@@ -397,7 +396,7 @@ void AES_key_filter(char *line, char **key) {
 	*key = malloc(16);
 	//printf("%lu", strlen(line));
 	// if 16 or more chars given, use first 16 chars for key
-	if (strlen(*key) >= 16) {
+	if (strlen(line) >= 16) {
 		memcpy(*key, line, 16);
 		return;
 	}
@@ -410,7 +409,7 @@ void AES_key_filter(char *line, char **key) {
 	// and fill remaining slots with '0'
 	for (; index < 16; index++) {
 		*(*key + index) = '0';
-	}
+	}	
 
 }
 
