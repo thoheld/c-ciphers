@@ -9,8 +9,10 @@ void default_tests();
 void file_input();
 void segment_one_processor();
 void segment_two_processor();
+char *segment_three_processor();
 void AES_key_filter();
 void print_handler();
+char *str_to_hex();
 
 int main(int argc, char *argv[]) { 
 	
@@ -162,16 +164,7 @@ void file_input(char *file_name) {
 
 	while (fgets(line, 200, file)) { // next line in file
 		
-		//printf("%s\n", line);
-			
-		if (ready_to_print) {
-			print_handler(triplet_number++, encrypt_or_decrypt, encryption_method, key, message);
-			if (message != NULL) {
-				free(message);
-				message = NULL;
-			}
-			ready_to_print = 0;
-		}
+		//printf("%s\n", line);	
 		
 		if (line[0] == '#') continue; // skip # comments
 
@@ -190,135 +183,26 @@ void file_input(char *file_name) {
 		// third segment (message)
 		} else if (triplet_segment == 3) { // last segment
 			
-			message = malloc(strlen(line) + 1);
-			strcpy(message, line);
+			message = segment_three_processor(*encrypt_or_decrypt, *encryption_method, line);
 			ready_to_print = 1; // all 3 segments processed, ready to print
 			triplet_segment = 1; // back to first segment
 
+		}
+
+		if (ready_to_print) {
+			print_handler(triplet_number++, *encrypt_or_decrypt, encryption_method, key, message);
+			if (message != NULL) {
+				free(message);
+				message = NULL;
+			}
+			ready_to_print = 0;
 		}
 
 	}
 
 	exit(1);
 
-	/*FILE *file = fopen("ciphers.txt", "r");
-	char line[200];
-	int tripNum = 1;
-	int tripSeg = 1;
-	char *p1;
-	char *p2;
-	int op;
-	char ops[10];
-	cipher c;
-	char cs[10];
-	char k[120];
-	char s[200];
-	string *p;
-
-	while (fgets(line, 200, file)){
-		if (tripSeg == 4) { // ready to print
-			if (op == 1) {
-				strcpy(ops, "Encrypt");
-			} else {
-				strcpy(ops, "Decrypt");
-			}
-
-			if (c == CAESAR) {
-				strcpy(cs, "Caesar"); 
-			} else if (c == AUGUSTUS) {
-				strcpy(cs, "Augustus"); 
-			} else {
-				strcpy(cs, "AES"); 
-			}
-
-			printf("Triplet %d: Cipher: %s, %s len: %lu\n", tripNum, cs, ops, strlen(s));
-		   
-			if (op == 1) {
-				p = encrypt_string(c, s, k);
-				print_C_string(p->cipher);
-				free(p->plain);
-				free(p->cipher);
-				free(p);
-			}  else if (op == 2) {
-				if (c == AES) {
-					p = new_cipher(s, strlen(s), 1);
-					print_C_string(p->decrypt(c, p, k));
-					free(p->cipher);
-					free(p);
-				} else {
-					p = new_cipher(s, strlen(s), 0);
-					print_C_string(p->decrypt(c, p, k));
-					free(p->cipher);
-					free(p);
-				}
-			}
-
-			printf("\n");
-			tripSeg = 1;
-			tripNum++;
-		}
-
-		if (line[0] == '#') continue; // skip # comments
-	   
-
-		if (tripSeg == 1) { // reading cipher and operation
-			p1 =  strtok(line, " ");
-			p2 =  strtok(NULL, " ");
-			if (strcmp(p1, "encrypt") == 0) {
-				op = 1;
-			} else {
-				op = 2;
-			}
-
-			if (strcmp(p2, "caesar\n") == 0) {
-				c = CAESAR;
-			} else if(strcmp(p2, "augustus\n") == 0) {
-				c = AUGUSTUS;
-			} else {
-				c = AES;
-			} 
-			tripSeg = 2;
-
-
-		} else if (tripSeg == 2) { // reading key
-		strcpy(k, calloc(120, sizeof(char))); // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ changing this changed it
-			if(strcmp(line, "default\n") == 0) {
-				if (c == CAESAR) {
-					k[0] = '1';
-				} else if (c == AUGUSTUS) {
-					strcpy(k, "12"); // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ this doesnt work :(
-				} else {
-					uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-					strcpy(k, def_aes_k);
-				}
-			} else {
-				line[strcspn(line, "\n")] = '\0';  // replace \n with \0
-				strcpy(k, line);
-				if (c == AES) { // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ i have no idea what to do rere
-					//char actual_key[16];
-					//char val = 0;
-					//for (int i = 0; i < 48; i+=3) {
-						//actual_key[i/3] = atoi()
-					//}
-					uint8_t def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-					strcpy(k, def_aes_k);
-
-				}
-			}
-			tripSeg = 3;
-
-
-		} else if (tripSeg == 3){ // reading string
-			strcpy(s, line);
-			s[strcspn(s, "\n")] = '\0';  // replace \n with \0
-			tripSeg = 4;
-		}
-	}
-
-	fclose(file);
-	exit(1);*/
 }
-
 
 
 /*
@@ -393,8 +277,8 @@ void segment_two_processor(char *line, char **key, cipher encryption_method) {
  */
 void AES_key_filter(char *line, char **key) {
 	
-	*key = malloc(16);
-	//printf("%lu", strlen(line));
+	*key =  str_to_hex(line, 47);
+	
 	// if 16 or more chars given, use first 16 chars for key
 	if (strlen(line) >= 16) {
 		memcpy(*key, line, 16);
@@ -418,12 +302,12 @@ void AES_key_filter(char *line, char **key) {
 /*
  * Constructs string and prints
  */
-void print_handler(int triplet_number, int *encrypt_or_decrypt, cipher *encryption_method, char *key, char *message) {
+void print_handler(int triplet_number, int encrypt_or_decrypt, cipher *encryption_method, char *key, char *message) {
 	
 	string *new_string;
 
 	// encrypt
-	if (encrypt_or_decrypt) {
+	if (encrypt_or_decrypt == 1) {
 		new_string = encrypt_string(*encryption_method, message, key);
 	} else {
 		// decrypt
@@ -436,7 +320,7 @@ void print_handler(int triplet_number, int *encrypt_or_decrypt, cipher *encrypti
 	}
 
 	//print
-	if (encrypt_or_decrypt) {
+	if (encrypt_or_decrypt == 1) {
 		switch (*encryption_method) {
 			case CAESAR:
 				printf("\nTriplet: %d, Cipher: Caesar, Encrypt, Length: %d\n", triplet_number, new_string->len);
@@ -469,4 +353,86 @@ void print_handler(int triplet_number, int *encrypt_or_decrypt, cipher *encrypti
 	free(new_string);
 	return;
 
+}
+
+
+
+/*
+ * Converts string of written hex values to chars containing actual hex value.
+ */
+char *str_to_hex(char *str, int len) {
+	
+	char *converted = malloc((len/3) + 1);
+
+	char curr_hex_value;
+	char curr_char;
+	int low_or_high = 0; // high = 0, low = 1
+	char high_digit = 0;
+	char low_digit = 0;
+	int converted_index = 0;
+	for (int index = 0; index < len; index++) {
+		
+		curr_char = *(str + index);
+		
+		if (curr_char  == ' ') { continue; }
+		
+		if (low_or_high == 0) { // high_digit
+
+			// letters
+			if (curr_char >= 'a' && curr_char <= 'f') {
+				high_digit = (curr_char - 'a') + 10; // convert to hex
+			// numbers
+			} else {
+				high_digit = curr_char - '0';
+			}
+			high_digit = high_digit << 4; // multiply by 16
+
+			low_or_high = 1; // prep for low
+			
+			continue;
+		}
+
+		if (low_or_high == 1) { // low_digit
+			
+			// letters
+			if (curr_char >= 'a' && curr_char <= 'f') {
+				low_digit = (curr_char - 'a') + 10; // convert to hex
+			// numbers
+			} else {
+				low_digit = curr_char - '0';
+			}
+			
+			// add digits together, store in key
+			curr_hex_value = high_digit | low_digit; // add
+			*(converted + converted_index) = curr_hex_value;
+			
+			high_digit = 0; // reset digits
+			low_digit = 0;
+
+			converted_index++;
+			low_or_high = 0; // back to high
+
+			continue;
+		}
+		
+	}
+
+	return converted;
+		
+}
+
+
+
+char *segment_three_processor(int encrypt_or_decrypt, cipher encryption_method, char* line) {
+	
+	char *message;
+	
+	if (encryption_method == AES && encrypt_or_decrypt == 2) {
+		message = str_to_hex(line, strlen(line));	
+		return message;
+	}
+	
+	message = malloc(strlen(line) + 1);
+	strcpy(message, line);
+	return message;
 }

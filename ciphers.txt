@@ -59,11 +59,11 @@ gusty
 # Triplet 15
 decrypt aes
 default
-46 59 65 9d ca 2b 85 d9 d4 64 ef e6 c7 ce 87 d0
+28 3c c8 05 52 50 6a 04 ab 6d 9f 22 ed 23 d9 25
 # Triplet 16
-decrypt aes
-2b 7e 15 16 28 ae d2 a6 ab f7 15 88 09 cf 4f 3c
-46 59 65 9d ca 2b 85 d9 d4 64 ef e6 c7 ce 87 d0
+encrypt augustus
+default
+Can anyone hear me?
 # Triplet 17
 encrypt aes
 default
@@ -104,7 +104,7 @@ Camp Giraffy will be held on Strawberry Fields!
 # Triplet 26
 decrypt aes
 31 32 32 37 37 20 50 65 6e 6e 79 20 4c 61 6e 65
-59 65 a2 7f bc fe 94 d0 a9 ca e0 86 f8 2e 2c 54 77 f5 4d 49 b8 a2 5c ad f7 96 13 0d ee 43 1c 0c 1e 45 cb 70 b2 13 44 56 b3 9a fc 83 8b 9a ca fe
+32 1c ee d3 7c 87 67 ce cc 26 3e 5f 6a 77 15 d2 36 a9 12 a6 7d 78 d1 1c 8f 3b f0 7c 6f 2c 99 ab e1 9c ce 28 1b ed ca 17 3a a0 c1 29 d6 62 99 3d c3 e7 90 12 23 62 6e 6a 0c 1c 05 9d 5b 8e 08 6c
 #Triplet 27
 encrypt caesar
 Easy as ABC
@@ -149,3 +149,8 @@ Jiub Jbg Ul Swcm
 decrypt aes
 43 61 6e 74 20 42 75 79 20 4d 65 20 4c 6f 76 65
 8e 42 e4 90 59 1a 78 61 b0 0d b4 c9 db 1e a6 fc
+#Triplet 38 BY THOMAS
+decrypt aes
+43 61 6e 74 20 42 75 79 20 4d 65 20 4c 6f 76 65
+34 bb 1b ff 06 6e f7 3f f0 93 bc df f2 1e a7 65
+#EOF

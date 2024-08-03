@@ -61,6 +61,9 @@ string *new_cipher(char *s, int len, int roundup) {
 	}
 	// copy given message to cipher
 	strcpy(new_string->cipher, s);
+
+	// initialize plain
+	new_string->plain = NULL;
 	
 	// function pointers
 	new_string->print = &print_string;
@@ -154,6 +157,8 @@ char *decrypt_string(cipher c, string *str, char *key) {
 		AES_CBC_decrypt_buffer(new_AES, (uint8_t *)buf, str->len); // decrypt
 		
 		free(str->plain); // free put plain in string->plain
+		str->plain = NULL;
+		
 		str->plain = malloc(str->len);
 		memcpy(str->plain, buf, str->len);
 
@@ -172,7 +177,8 @@ char *decrypt_string(cipher c, string *str, char *key) {
  * Copies default initialization vector into iv.
  */
 void setiv_string(char *newiv) {
-	memcpy(newiv, "lifeisgoodsmtms.", 16);
+	uint8_t iv[]  = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+	memcpy(newiv, iv, 16);
 }
 
 
@@ -238,13 +244,16 @@ void static print_string(string *s, string_type st) {
 		printf(" | ");
 
 		for (int i = row; i < row+16; i++) // 16 more columns
+			if (i >= s->len) {
+				printf(" ");
 			// if char is text, print
-			if (isprint(text[i]))
+			} else if (isprint(*(text + i))) {
 				printf("%c" , text[i]);
 			// else print " "
-			else
+			} else {
 				printf(" ");
-		
+			}
+
 		printf("\n");
 	
 	}
