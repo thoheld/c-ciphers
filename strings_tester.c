@@ -10,6 +10,7 @@ void file_input();
 void segment_one_processor();
 void segment_two_processor();
 void AES_key_filter();
+void print_handler();
 
 int main(int argc, char *argv[]) { 
 	
@@ -156,18 +157,26 @@ void file_input(char *file_name) {
 	int *encrypt_or_decrypt = malloc(sizeof(int)); // 1 for encrypt, 2 for decrypt
 	cipher *encryption_method = malloc(sizeof(cipher));
 	char *key = NULL;
-	char *plain = NULL;
+	char *message = NULL;
+	int triplet_number = 1;
 
 	while (fgets(line, 200, file)) { // next line in file
 		
-		line[strlen(line)-1] = '\0'; // replace '\n' with '\0'
-		
+		//printf("%s\n", line);
+			
 		if (ready_to_print) {
-			//print here
+			print_handler(triplet_number++, encrypt_or_decrypt, encryption_method, key, message);
+			if (message != NULL) {
+				free(message);
+				message = NULL;
+			}
+			ready_to_print = 0;
 		}
 		
 		if (line[0] == '#') continue; // skip # comments
 
+		line[strlen(line)-1] = '\0'; // replace '\n' with '\0'
+		
 		// first segment (encrypt/decrypt and cipher)
 		if (triplet_segment == 1) {
 			segment_one_processor(line, encrypt_or_decrypt, encryption_method);
@@ -181,8 +190,8 @@ void file_input(char *file_name) {
 		// third segment (message)
 		} else if (triplet_segment == 3) { // last segment
 			
-			plain = malloc(strlen(line) + 1);
-			strcpy(plain, line);
+			message = malloc(strlen(line) + 1);
+			strcpy(message, line);
 			ready_to_print = 1; // all 3 segments processed, ready to print
 			triplet_segment = 1; // back to first segment
 
@@ -325,11 +334,12 @@ void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encrypti
 	}
 
 	char *str_encryption_method =  strtok(NULL, " ");
-	if (strcmp(str_encryption_method, "caesar\n") == 0) {
+	if (strcmp(str_encryption_method, "caesar") == 0) {
 		*encryption_method = CAESAR;
-	} else if (strcmp(str_encryption_method, "augustus\n") == 0) {
+	} else if (strcmp(str_encryption_method, "augustus") == 0) {
 		*encryption_method = AUGUSTUS;
 	} else {
+		printf("here");
 		*encryption_method = AES;
 	}
 
@@ -401,5 +411,63 @@ void AES_key_filter(char *line, char **key) {
 	for (; index < 16; index++) {
 		*(*key + index) = '0';
 	}
+
+}
+
+
+
+/*
+ * Constructs string and prints
+ */
+void print_handler(int triplet_number, int *encrypt_or_decrypt, cipher *encryption_method, char *key, char *message) {
+	
+	string *new_string;
+
+	// encrypt
+	if (encrypt_or_decrypt) {
+		new_string = encrypt_string(*encryption_method, message, key);
+	} else {
+		// decrypt
+		if (*encryption_method == AES) { // roundup = 1 for AES
+			new_string = new_cipher(message, strlen(message), 1);
+		} else {
+			new_string = new_cipher(message, strlen(message), 0);
+		}
+		decrypt_string(*encryption_method, new_string, key);
+	}
+
+	//print
+	if (encrypt_or_decrypt) {
+		switch (*encryption_method) {
+			case CAESAR:
+				printf("\nTriplet: %d, Cipher: Caesar, Encrypt, Length: %d\n", triplet_number, new_string->len);
+				break;
+			case AUGUSTUS:
+				printf("\nTriplet: %d, Cipher: Augustus, Encrypt, Length: %d\n", triplet_number, new_string->len);
+				break;
+			case AES:
+				printf("\nTriplet: %d, Cipher: AES, Encrypt, Length: %d\n", triplet_number, new_string->len);
+				break;
+		}
+		new_string->print(new_string, CIPHER);
+
+	} else {
+		switch (*encryption_method) {
+			case CAESAR:
+				printf("\nTriplet: %d, Cipher: Caesar, Decrypt, Length: %d\n", triplet_number, new_string->len);
+				break;
+			case AUGUSTUS:
+				printf("\nTriplet: %d, Cipher: Augustus, Decrypt, Length: %d\n", triplet_number, new_string->len);
+				break;
+			case AES:
+				printf("\nTriplet: %d, Cipher: AES, Decrypt, Length: %d\n", triplet_number, new_string->len);
+				break;
+		}
+		new_string->print(new_string, PLAIN);
+
+	}
+
+	free(new_string);
+	return;
 
 }
