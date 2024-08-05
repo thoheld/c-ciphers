@@ -13,142 +13,29 @@ char *segment_three_processor();
 void AES_key_filter();
 void print_handler();
 char *str_to_hex();
+void cmd_processor();
+
+
 
 int main(int argc, char *argv[]) { 
 	
-	cipher cipher_type = CAESAR;
-	
 	if (argc > 1) {
-
 		if (strcmp(argv[1], "default") == 0) {
 			default_tests();
 			exit(1);
 		
 		} else if (strcmp(argv[1], "ciphers.txt") == 0) {
 			file_input(argv[1]);
-		}
-	
+		}	
 	}
-			
-	printf("\nDefault Keys:\n");
-	printf("Caesar: 1\n");
-	printf("Augustus: 12\n");
-	printf("AES: 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6\n     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c\n");
-	printf("\n");
-
-	int running = 1;
-	while (running) {   
-			char in_c[3];
-			int gettingCMD = 1;
-			while (gettingCMD) {
-				printf("Enter command - q(uit), c(aesar), au(gustus), ae(s): ");
-				fgets(in_c, 3, stdin);
-				if (strcmp(in_c, "c\n") == 0) {
-					cipher_type = CAESAR;
-					break;
-				} else if (strcmp(in_c, "au") == 0) {
-					cipher_type = AUGUSTUS;
-					break;
-				} else if (strcmp(in_c, "ae") == 0) {
-					cipher_type = AES;
-					break;
-				} else if (strcmp(in_c, "q\n") == 0) {
-					exit(1);
-				} else {
-					printf("Please enter a command!\n");
-				}
-			}
-			printf("\n");
-			
-			int catchFirst = 0;
-			if (cipher_type == AES || cipher_type == AUGUSTUS) {
-				catchFirst = 1;
-			}
-			char in_s[120];
-			int waitingForString = 1;
-			//fgets(in_s, 120, stdin);
-			while (waitingForString) {
-				if (!catchFirst) {
-					printf("Enter string: ");
-				}
-				fgets(in_s, 120, stdin);
-				in_s[strcspn(in_s, "\n")] = '\0';
-				printf("\n");
-
-				if (catchFirst && strlen(in_s) == 0) {
-					catchFirst = 0; // fixes skipping problem when au or ae are chosen
-					continue;
-				} else if (strlen(in_s) == 0) {
-					printf("You must enter a string!\n");
-					continue;
-				} else {
-					break;
-				}
-			}
-
-			char *in_k = malloc(120);
-			printf("Enter key (Enter for default): ");
-			fgets(in_k, 120, stdin);
-			in_s[strcspn(in_s, "\n")] = '\0';  // replace \n with \0
-			if (strcmp(in_k, "\n") == 0) {
-				if (cipher_type == CAESAR) {
-					in_k[0] = '1';
-					printf("Using default key.\n");
-				} else if (cipher_type == AUGUSTUS) {
-					for (int i = 0; i < 200; i++) {
-						in_k[i] = '\0';
-					}
-					in_k[0] = '1';
-					in_k[1] = '2';
-					in_k[2] = '\0';
-					printf("Using default key.\n");
-				} else if (cipher_type == AES) {
-					char def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-					strcpy(in_k, def_aes_k);
-					printf("Using default key.\n");
-				}
-			}
-			
-			string *ms;
-			if (cipher_type == AES) {
-				ms = new_plain(in_s, 1);
-			} else {
-				ms = new_plain(in_s, 0);
-			}
-			
-			
-			printf("\nPlain text string:\nlen: %d\n", ms->len);
-			ms->print(ms, PLAIN);
-
-			string *b = ms->encrypt(cipher_type, in_s, in_k);
-			printf("\nCipher text string:\nlen: %d\n", ms->len);
-			b->print(b, CIPHER);
-
-			char *s = b->decrypt(cipher_type, b, in_k);
-			printf("\nDecrypted input:\n");
-			printf("%s\n", s);
-			printf("len: %lu\n", strlen(s));
-			
-			print_C_string(s);
-			printf("\nlen: %lu\n", strlen(s));
-			b->print(b, PLAIN);
-			printf("\n\n\n");
-
-			free(ms->plain);
-			free(ms->cipher);
-			free(ms);
-			free(b->plain);
-			free(b->cipher);
-			free(b);
-
-		}
+	cmd_processor();
 	return 0;
-	}
+}
 
 
 
 /*
- * File handler
+ * Run encryptions and decryptions from ciphers.txt file.
  */
 void file_input(char *file_name) {
 	
@@ -189,6 +76,7 @@ void file_input(char *file_name) {
 
 		}
 
+		// print
 		if (ready_to_print) {
 			print_handler(triplet_number++, *encrypt_or_decrypt, encryption_method, key, message);
 			if (message != NULL) {
@@ -206,10 +94,11 @@ void file_input(char *file_name) {
 
 
 /*
- * Process first segment of triplet.
+ * Process first segment of triplet (encrypt/decrypt and encryption method) .
 */
 void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encryption_method) {
 	
+	// encrypt or decrypt
 	char *str_encrypt_or_decrypt =  strtok(line, " ");
 	if (strcmp(str_encrypt_or_decrypt, "encrypt") == 0) {
 		*encrypt_or_decrypt = 1;
@@ -217,6 +106,7 @@ void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encrypti
 		*encrypt_or_decrypt = 2;
 	}
 
+	// which encryption method
 	char *str_encryption_method =  strtok(NULL, " ");
 	if (strcmp(str_encryption_method, "caesar") == 0) {
 		*encryption_method = CAESAR;
@@ -231,7 +121,7 @@ void segment_one_processor(char *line, int *encrypt_or_decrypt, cipher *encrypti
 
 
 /*
- * Process second segment of triplet.
+ * Process second segment of triplet (key).
 */
 void segment_two_processor(char *line, char **key, cipher encryption_method) {
 	
@@ -240,7 +130,7 @@ void segment_two_processor(char *line, char **key, cipher encryption_method) {
 		*key = NULL;
 	}
 	
-	// default key
+	// default keys
 	if(strcmp(line, "default") == 0) {
 		if (encryption_method == CAESAR) {
 			*key = malloc(2);
@@ -358,11 +248,11 @@ void print_handler(int triplet_number, int encrypt_or_decrypt, cipher *encryptio
 
 
 /*
- * Converts string of written hex values to chars containing actual hex value.
+ * Converts string of written hex values to chars containing actual hex values.
  */
 char *str_to_hex(char *str, int len) {
 	
-	char *converted = malloc((len/3) + 1);
+	char *converted = malloc((len/3) + 1); // converted string
 
 	char curr_hex_value;
 	char curr_char;
@@ -370,14 +260,17 @@ char *str_to_hex(char *str, int len) {
 	char high_digit = 0;
 	char low_digit = 0;
 	int converted_index = 0;
+
+	// for every digit
 	for (int index = 0; index < len; index++) {
 		
 		curr_char = *(str + index);
 		
+		// skip spaces
 		if (curr_char  == ' ') { continue; }
 		
-		if (low_or_high == 0) { // high_digit
-
+		// high_digit
+		if (low_or_high == 0) {
 			// letters
 			if (curr_char >= 'a' && curr_char <= 'f') {
 				high_digit = (curr_char - 'a') + 10; // convert to hex
@@ -387,13 +280,12 @@ char *str_to_hex(char *str, int len) {
 			}
 			high_digit = high_digit << 4; // multiply by 16
 
-			low_or_high = 1; // prep for low
-			
+			low_or_high = 1; // prep for low	
 			continue;
 		}
 
-		if (low_or_high == 1) { // low_digit
-			
+		// low_digit
+		if (low_or_high == 1) {
 			// letters
 			if (curr_char >= 'a' && curr_char <= 'f') {
 				low_digit = (curr_char - 'a') + 10; // convert to hex
@@ -411,8 +303,6 @@ char *str_to_hex(char *str, int len) {
 
 			converted_index++;
 			low_or_high = 0; // back to high
-
-			continue;
 		}
 		
 	}
@@ -423,6 +313,9 @@ char *str_to_hex(char *str, int len) {
 
 
 
+/*
+ * Returns message to be printed.
+ */
 char *segment_three_processor(int encrypt_or_decrypt, cipher encryption_method, char* line) {
 	
 	char *message;
@@ -435,4 +328,126 @@ char *segment_three_processor(int encrypt_or_decrypt, cipher encryption_method, 
 	message = malloc(strlen(line) + 1);
 	strcpy(message, line);
 	return message;
+}
+
+
+
+/*
+ * Allow user to enter and run specific specific encryptions and decryptions.
+ */
+void cmd_processor() {
+	printf("\nDefault Keys:\n");
+	printf("Caesar: 1\n");
+	printf("Augustus: 12\n");
+	printf("AES: 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6\n     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c\n");
+	printf("\n");
+
+	cipher cipher_type = CAESAR;
+	int running = 1;
+	while (running) {   
+			char in_c[3];
+			int gettingCMD = 1;
+			while (gettingCMD) {
+				printf("Enter command - q(uit), c(aesar), au(gustus), ae(s): ");
+				fgets(in_c, 3, stdin);
+				if (strcmp(in_c, "c\n") == 0) {
+					cipher_type = CAESAR;
+					break;
+				} else if (strcmp(in_c, "au") == 0) {
+					cipher_type = AUGUSTUS;
+					break;
+				} else if (strcmp(in_c, "ae") == 0) {
+					cipher_type = AES;
+					break;
+				} else if (strcmp(in_c, "q\n") == 0) {
+					exit(1);
+				} else {
+					printf("Please enter a command!\n");
+				}
+			}
+			printf("\n");
+			
+			int catchFirst = 0;
+			if (cipher_type == AES || cipher_type == AUGUSTUS) {
+				catchFirst = 1;
+			}
+			char in_s[120];
+			int waitingForString = 1;
+			//fgets(in_s, 120, stdin);
+			while (waitingForString) {
+				if (!catchFirst) {
+					printf("Enter string: ");
+				}
+				fgets(in_s, 120, stdin);
+				in_s[strcspn(in_s, "\n")] = '\0';
+				printf("\n");
+
+				if (catchFirst && strlen(in_s) == 0) {
+					catchFirst = 0; // fixes skipping problem when au or ae are chosen
+					continue;
+				} else if (strlen(in_s) == 0) {
+					printf("You must enter a string!\n");
+					continue;
+				} else {
+					break;
+				}
+			}
+
+			char *in_k = malloc(120);
+			printf("Enter key (Enter for default): ");
+			fgets(in_k, 120, stdin);
+			in_s[strcspn(in_s, "\n")] = '\0';  // replace \n with \0
+			if (strcmp(in_k, "\n") == 0) {
+				if (cipher_type == CAESAR) {
+					in_k[0] = '1';
+					printf("Using default key.\n");
+				} else if (cipher_type == AUGUSTUS) {
+					for (int i = 0; i < 200; i++) {
+						in_k[i] = '\0';
+					}
+					in_k[0] = '1';
+					in_k[1] = '2';
+					in_k[2] = '\0';
+					printf("Using default key.\n");
+				} else if (cipher_type == AES) {
+					char def_aes_k[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+					strcpy(in_k, def_aes_k);
+					printf("Using default key.\n");
+				}
+			}
+			
+			string *ms;
+			if (cipher_type == AES) {
+				ms = new_plain(in_s, 1);
+			} else {
+				ms = new_plain(in_s, 0);
+			}
+			
+			
+			printf("\nPlain text string:\nlen: %d\n", ms->len);
+			ms->print(ms, PLAIN);
+
+			string *b = ms->encrypt(cipher_type, in_s, in_k);
+			printf("\nCipher text string:\nlen: %d\n", ms->len);
+			b->print(b, CIPHER);
+
+			char *s = b->decrypt(cipher_type, b, in_k);
+			printf("\nDecrypted input:\n");
+			printf("%s\n", s);
+			printf("len: %lu\n", strlen(s));
+			
+			print_C_string(s);
+			printf("\nlen: %lu\n", strlen(s));
+			b->print(b, PLAIN);
+			printf("\n\n\n");
+
+			free(ms->plain);
+			free(ms->cipher);
+			free(ms);
+			free(b->plain);
+			free(b->cipher);
+			free(b);
+
+		}
+
 }

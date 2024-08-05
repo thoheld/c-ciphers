@@ -191,7 +191,6 @@ void print_C_string(char *s) {
 	int i; // columns
 	int row; // rows
 	
-	//printf("%s\n", s);
 	for (row = 0; row < strlen(s); row+=16) {
 		for (i = row; i < row+16; i++)
 			if (i >= strlen(s)) {
